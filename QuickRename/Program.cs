@@ -15,10 +15,76 @@ using System.Text;
 
 //var directory = args[1];
 //var textNamesPath = args[2];
+string[] arguments = Environment.GetCommandLineArgs();
 
-string directory = @"C:\Users\devman\Documents\TestRenameFiles";
-string textNamesPath = @"C:\Users\devman\Documents\TestRenameFiles\names.txt";
-//string[] arguments = Environment.GetCommandLineArgs();
+List<string> flags = new List<string>();
+List<string> argList = new List<string>();
+
+string directory = null;
+string textNamesPath = null;
+// We can start at index 1 because we skip the app name
+for (int i = 1; i < arguments.Length; i++)
+{
+    bool currentIsFlag = arguments[i].StartsWith("-") || arguments[i].StartsWith("/");
+
+    if (currentIsFlag)
+    {
+        //TODO: handle flags
+        flags.Add(arguments[i]);
+        continue;
+    }
+
+    argList.Add(arguments[i]);
+
+}
+
+if (argList.Count != 2)
+{
+    Console.WriteLine("Not all arguments were specified. Please use the following format:");
+    Console.WriteLine($"{Path.GetFileName(arguments[0])} <directory> <text file with names>");
+    return 1;
+}
+
+//Verify and set proper arguments
+bool validDirectory = String.IsNullOrEmpty(directory) && Directory.Exists(argList[0]);
+
+if (validDirectory)
+{
+    directory = argList[0];
+}
+else
+{
+    Console.WriteLine($"The directory {argList[0]} is not valid please enter a valid path");
+    return 1;
+}
+
+
+bool validFile = String.IsNullOrEmpty(textNamesPath) && File.Exists(argList[1]) && Path.GetExtension(argList[1]).Contains("txt");
+
+if (validFile)
+{
+    textNamesPath = argList[1];
+}
+else
+{
+    Console.WriteLine($"The file {argList[1]} is not a valid text file. Please specify a text file to use.");
+    return 1;
+}
+
+
+
+
+if (String.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(textNamesPath))
+{
+    Console.WriteLine("We were unable to parse all of the paths we need please use the command properly...");
+    Console.WriteLine($"{Path.GetFileName(arguments[0])} <directory> <text file with names>");
+    return 1;
+}
+
+
+//string directory = @"C:\Users\devman\Documents\TestRenameFiles";
+//string textNamesPath = @"C:\Users\devman\Documents\TestRenameFiles\names.txt";
+
 // get the files we are going to rename.
 
 var mediaFiles = Directory.GetFiles(directory);
@@ -62,7 +128,7 @@ var fileNameArray = FileNames.ToArray();
 // we don't want to rename the already named files because the order in the directory has changed and may no longer match the text doc.
 string[] mediaFilesToRename = (from elem in mediaFiles where !removedNames.Contains(Path.GetFileName(elem)?.Substring(0, Path.GetFileName(elem).Length - 4)) select elem)?.ToArray();
 
-if(mediaFilesToRename.Length > 0)
+if (mediaFilesToRename.Length > 0)
 {
     Console.WriteLine("Renaming files:");
 }
